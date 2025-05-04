@@ -8,9 +8,9 @@ import CustomCursor from "@/components/custom-cursor"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "DEW. - Portfolio cá nhân",
+  title: "Procode. - Portfolio cá nhân",
   description: "Trang web portfolio cá nhân hiện đại",
-    generator: 'v0.dev'
+    generator: 'Procode.'
 }
 
 export default function RootLayout({
