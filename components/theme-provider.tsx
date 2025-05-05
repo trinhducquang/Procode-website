@@ -11,6 +11,11 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
     const updateTheme = () => {
       const isDark = document.documentElement.classList.contains("dark")
       document.body.classList.toggle("dark", isDark)
+
+      // Thêm class cho tất cả các section
+      document.querySelectorAll("section").forEach((section) => {
+        section.classList.toggle("dark", isDark)
+      })
     }
 
     // Theo dõi thay đổi của theme
