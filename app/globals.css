@@ -174,3 +174,41 @@ button.bg-black {
   background-color: rgb(var(--primary-background));
   color: rgb(var(--primary-foreground));
 }
+
+/* Đảm bảo hero section có màu sắc phù hợp */
+.hero-overlay {
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.dark .hero-overlay {
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+/* Đảm bảo footer có màu sắc phù hợp */
+footer {
+  background-color: rgb(var(--card-background));
+}
+
+/* Đảm bảo footer có màu sắc phù hợp */
+footer {
+  background-color: rgb(var(--card-background));
+  color: rgb(var(--foreground));
+  border-color: rgb(var(--border));
+}
+
+/* Đảm bảo mobile menu có màu sắc phù hợp */
+.mobile-menu {
+  background-color: rgb(var(--background));
+  color: rgb(var(--foreground));
+}
+
+/* Đảm bảo các section có màu sắc phù hợp */
+section.bg-black {
+  background-color: rgb(var(--background));
+}
+
+/* Đảm bảo các card có màu sắc phù hợp */
+.card {
+  background-color: rgb(var(--card-background));
+  color: rgb(var(--card-foreground));
+}

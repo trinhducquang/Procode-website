@@ -7,20 +7,23 @@ import { useEffect, useState, useCallback } from "react"
 import { useSmoothScroll } from "@/hooks/use-smooth-scroll"
 import { ThemeToggle } from "./theme-toggle"
 import MobileMenu from "./mobile-menu"
-
-const navItems = [
-  { name: "Home", href: "#", active: true },
-  { name: "About", href: "#about", active: false },
-  { name: "Portfolio", href: "#portfolio", active: false },
-  { name: "Services", href: "#services", active: false },
-  { name: "Testimonial", href: "#testimonial", active: false },
-  { name: "Blog", href: "#blog", active: false },
-  { name: "Contact", href: "#contact", active: false },
-]
+import LanguageSwitcher from "./language-switcher"
+import { useI18n } from "@/lib/i18n/i18n-context"
 
 export default function Header() {
+  const { t } = useI18n()
   const [scrolled, setScrolled] = useState(false)
   const [activeSection, setActiveSection] = useState("")
+
+  const navItems = [
+    { name: t.nav.home, href: "#", active: true },
+    { name: t.nav.about, href: "#about", active: false },
+    { name: t.nav.portfolio, href: "#portfolio", active: false },
+    { name: t.nav.services, href: "#services", active: false },
+    { name: t.nav.testimonial, href: "#testimonial", active: false },
+    { name: t.nav.blog, href: "#blog", active: false },
+    { name: t.nav.contact, href: "#contact", active: false },
+  ]
 
   // Sử dụng hook smooth scroll
   useSmoothScroll()
@@ -72,7 +75,7 @@ export default function Header() {
             DEW.
           </Link>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
             <nav className="hidden md:flex space-x-6">
               {navItems.map((item, index) => {
                 const isActive = item.href === "#" ? activeSection === "" : activeSection === item.href.replace("#", "")
@@ -103,6 +106,7 @@ export default function Header() {
                 )
               })}
             </nav>
+            <LanguageSwitcher />
             <ThemeToggle />
             <MobileMenu navItems={navItems} activeSection={activeSection} scrolled={scrolled} />
           </div>

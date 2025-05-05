@@ -9,8 +9,10 @@ import { AnimatedSection } from "./animated-section"
 import { StaggeredChildren } from "./staggered-children"
 import { StaggeredItem } from "./staggered-item"
 import { motion } from "framer-motion"
+import { useI18n } from "@/lib/i18n/i18n-context"
 
 export default function Contact() {
+  const { t } = useI18n()
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -26,7 +28,7 @@ export default function Contact() {
     e.preventDefault()
     console.log("Form submitted:", formData)
     // Xử lý gửi form ở đây
-    alert("Tin nhắn đã được gửi!")
+    alert(t.contact.success)
     setFormData({ name: "", email: "", message: "" })
   }
 
@@ -34,7 +36,7 @@ export default function Contact() {
       <section id="contact" className="py-20 bg-card-theme transition-colors duration-300">
         <div className="container mx-auto px-4">
           <AnimatedSection>
-            <h2 className="text-4xl font-bold text-center mb-16 text-theme">Contact Me</h2>
+            <h2 className="text-4xl font-bold text-center mb-16 text-theme">{t.contact.title}</h2>
           </AnimatedSection>
 
           <div className="max-w-5xl mx-auto">
@@ -75,7 +77,7 @@ export default function Contact() {
                   <motion.input
                       type="text"
                       name="name"
-                      placeholder="Name"
+                      placeholder={t.contact.form.name}
                       value={formData.name}
                       onChange={handleChange}
                       required
@@ -87,7 +89,7 @@ export default function Contact() {
                   <motion.input
                       type="email"
                       name="email"
-                      placeholder="Email"
+                      placeholder={t.contact.form.email}
                       value={formData.email}
                       onChange={handleChange}
                       required
@@ -99,7 +101,7 @@ export default function Contact() {
 
                 <motion.textarea
                     name="message"
-                    placeholder="Message..."
+                    placeholder={t.contact.form.message}
                     value={formData.message}
                     onChange={handleChange}
                     required
@@ -112,7 +114,7 @@ export default function Contact() {
                 <div className="flex justify-center">
                   <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                     <Button type="submit" className="bg-primary-theme text-primary-theme hover:opacity-90 px-8 py-3">
-                      Send Message
+                      {t.contact.form.send}
                     </Button>
                   </motion.div>
                 </div>
