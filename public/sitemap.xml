@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+    <url>
+        <loc>https://procode-website.vercel.app/</loc>
+        <lastmod>2025-05-06</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>1.0</priority>
+        <xhtml:link rel="alternate" hreflang="en" href="https://procode-website.vercel.app/en" />
+        <xhtml:link rel="alternate" hreflang="ja" href="https://procode-website.vercel.app/ja" />
+        <xhtml:link rel="alternate" hreflang="vi" href="https://procode-website.vercel.app/vi" />
+    </url>
+    <url>
+        <loc>https://procode-website.vercel.app/blog</loc>
+        <lastmod>2025-05-06</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+        <xhtml:link rel="alternate" hreflang="en" href="https://procode-website.vercel.app/en/blog" />
+        <xhtml:link rel="alternate" hreflang="ja" href="https://procode-website.vercel.app/ja/blog" />
+        <xhtml:link rel="alternate" hreflang="vi" href="https://procode-website.vercel.app/vi/blog" />
+    </url>
+    <url>
+        <loc>https://procode-website.vercel.app/portfolio</loc>
+        <lastmod>2025-05-06</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.9</priority>
+        <xhtml:link rel="alternate" hreflang="en" href="https://procode-website.vercel.app/en/portfolio" />
+        <xhtml:link rel="alternate" hreflang="ja" href="https://procode-website.vercel.app/ja/portfolio" />
+        <xhtml:link rel="alternate" hreflang="vi" href="https://procode-website.vercel.app/vi/portfolio" />
+    </url>
+    <url>
+        <loc>https://procode-website.vercel.app/contact</loc>
+        <lastmod>2025-05-06</lastmod>
+        <changefreq>yearly</changefreq>
+        <priority>0.7</priority>
+        <xhtml:link rel="alternate" hreflang="en" href="https://procode-website.vercel.app/en/contact" />
+        <xhtml:link rel="alternate" hreflang="ja" href="https://procode-website.vercel.app/ja/contact" />
+        <xhtml:link rel="alternate" hreflang="vi" href="https://procode-website.vercel.app/vi/contact" />
+    </url>
+</urlset>

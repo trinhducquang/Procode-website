@@ -1,0 +1,642 @@
+"use client"
+
+import { useEffect, useRef } from "react"
+import { useWeather } from "@/lib/weather/weather-context"
+
+export default function WeatherEffects() {
+    const { weather, soundEnabled } = useWeather()
+    const canvasRef = useRef<HTMLCanvasElement>(null)
+    const audioRef = useRef<HTMLAudioElement | null>(null)
+
+    // Xử lý âm thanh
+    useEffect(() => {
+        if (!soundEnabled) {
+            if (audioRef.current) {
+                audioRef.current.pause()
+                audioRef.current = null
+            }
+            return
+        }
+
+        let audioSrc = ""
+        switch (weather) {
+            case "rain":
+                audioSrc = "/sounds/rain.mp3"
+                break
+            case "snow":
+                audioSrc = "/sounds/snow.mp3"
+                break
+            case "leaves":
+                audioSrc = "/sounds/wind.mp3"
+                break
+            case "fog":
+                audioSrc = "/sounds/fog.mp3"
+                break
+            case "stars":
+                audioSrc = "/sounds/night.mp3"
+                break
+            case "fireworks":
+                audioSrc = "/sounds/fireworks.mp3"
+                break
+            default:
+                audioSrc = ""
+        }
+
+        if (audioSrc) {
+            if (!audioRef.current) {
+                audioRef.current = new Audio(audioSrc)
+                audioRef.current.loop = true
+                audioRef.current.volume = 0.3
+                audioRef.current.play().catch((e) => console.log("Audio play failed:", e))
+            } else if (audioRef.current.src !== new URL(audioSrc, window.location.href).href) {
+                audioRef.current.pause()
+                audioRef.current = new Audio(audioSrc)
+                audioRef.current.loop = true
+                audioRef.current.volume = 0.3
+                audioRef.current.play().catch((e) => console.log("Audio play failed:", e))
+            }
+        }
+
+        return () => {
+            if (audioRef.current) {
+                audioRef.current.pause()
+                audioRef.current = null
+            }
+        }
+    }, [weather, soundEnabled])
+
+    // Hiệu ứng mưa (đã loại bỏ sấm chớp)
+    useEffect(() => {
+        if (weather !== "rain" || !canvasRef.current) return
+
+        const canvas = canvasRef.current
+        const ctx = canvas.getContext("2d")
+        if (!ctx) return
+
+        canvas.width = window.innerWidth
+        canvas.height = window.innerHeight
+
+        const drops: { x: number; y: number; length: number; speed: number; opacity: number }[] = []
+        const dropCount = Math.floor(window.innerWidth / 5) // Số lượng giọt mưa dựa trên chiều rộng màn hình
+
+        // Tạo các giọt mưa
+        for (let i = 0; i < dropCount; i++) {
+            drops.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                length: Math.random() * 20 + 10,
+                speed: Math.random() * 10 + 5,
+                opacity: Math.random() * 0.5 + 0.3,
+            })
+        }
+
+        // Vẽ mưa
+        const animate = () => {
+            if (!ctx || !canvas) return
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height)
+            ctx.strokeStyle = "rgba(174, 194, 224, 0.7)"
+            ctx.lineWidth = 1
+
+            drops.forEach((drop) => {
+                ctx.beginPath()
+                ctx.moveTo(drop.x, drop.y)
+                ctx.lineTo(drop.x, drop.y + drop.length)
+                ctx.globalAlpha = drop.opacity
+                ctx.stroke()
+
+                drop.y += drop.speed
+
+                // Nếu giọt mưa rơi ra khỏi màn hình, đặt lại vị trí
+                if (drop.y > canvas.height) {
+                    drop.y = 0 - drop.length
+                    drop.x = Math.random() * canvas.width
+                }
+            })
+
+            requestAnimationFrame(animate)
+        }
+
+        const animationId = requestAnimationFrame(animate)
+
+        // Xử lý thay đổi kích thước màn hình
+        const handleResize = () => {
+            if (!canvas) return
+            canvas.width = window.innerWidth
+            canvas.height = window.innerHeight
+        }
+
+        window.addEventListener("resize", handleResize)
+
+        return () => {
+            window.removeEventListener("resize", handleResize)
+            cancelAnimationFrame(animationId)
+        }
+    }, [weather])
+
+    // Hiệu ứng tuyết rơi
+    useEffect(() => {
+        if (weather !== "snow" || !canvasRef.current) return
+
+        const canvas = canvasRef.current
+        const ctx = canvas.getContext("2d")
+        if (!ctx) return
+
+        canvas.width = window.innerWidth
+        canvas.height = window.innerHeight
+
+        const snowflakes: {
+            x: number
+            y: number
+            size: number
+            speed: number
+            opacity: number
+            swing: number
+            swingSpeed: number
+        }[] = []
+        const snowflakeCount = Math.floor(window.innerWidth / 10) // Số lượng bông tuyết dựa trên chiều rộng màn hình
+
+        // Tạo các bông tuyết
+        for (let i = 0; i < snowflakeCount; i++) {
+            snowflakes.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: Math.random() * 5 + 1,
+                speed: Math.random() * 1 + 0.5,
+                opacity: Math.random() * 0.5 + 0.3,
+                swing: 0,
+                swingSpeed: Math.random() * 0.02 + 0.01,
+            })
+        }
+
+        // Vẽ tuyết
+        const animate = () => {
+            if (!ctx || !canvas) return
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height)
+            ctx.fillStyle = "rgba(255, 255, 255, 0.8)"
+
+            snowflakes.forEach((flake) => {
+                ctx.beginPath()
+                ctx.globalAlpha = flake.opacity
+                ctx.arc(flake.x + Math.sin(flake.swing) * 10, flake.y, flake.size, 0, Math.PI * 2)
+                ctx.fill()
+
+                flake.y += flake.speed
+                flake.swing += flake.swingSpeed
+
+                // Nếu bông tuyết rơi ra khỏi màn hình, đặt lại vị trí
+                if (flake.y > canvas.height) {
+                    flake.y = 0 - flake.size
+                    flake.x = Math.random() * canvas.width
+                }
+            })
+
+            requestAnimationFrame(animate)
+        }
+
+        const animationId = requestAnimationFrame(animate)
+
+        // Xử lý thay đổi kích thước màn hình
+        const handleResize = () => {
+            if (!canvas) return
+            canvas.width = window.innerWidth
+            canvas.height = window.innerHeight
+        }
+
+        window.addEventListener("resize", handleResize)
+
+        return () => {
+            window.removeEventListener("resize", handleResize)
+            cancelAnimationFrame(animationId)
+        }
+    }, [weather])
+
+    // Hiệu ứng lá rơi
+    useEffect(() => {
+        if (weather !== "leaves" || !canvasRef.current) return
+
+        const canvas = canvasRef.current
+        const ctx = canvas.getContext("2d")
+        if (!ctx) return
+
+        canvas.width = window.innerWidth
+        canvas.height = window.innerHeight
+
+        const leaves: {
+            x: number
+            y: number
+            size: number
+            speed: number
+            rotation: number
+            rotationSpeed: number
+            color: string
+            swing: number
+            swingSpeed: number
+        }[] = []
+        const leafCount = Math.floor(window.innerWidth / 20) // Số lượng lá dựa trên chiều rộng màn hình
+        const leafColors = ["#8B4513", "#A0522D", "#CD853F", "#D2691E", "#B8860B", "#DAA520", "#FF8C00"]
+
+        // Tạo các lá
+        for (let i = 0; i < leafCount; i++) {
+            leaves.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: Math.random() * 10 + 5,
+                speed: Math.random() * 2 + 1,
+                rotation: Math.random() * 360,
+                rotationSpeed: Math.random() * 2 - 1,
+                color: leafColors[Math.floor(Math.random() * leafColors.length)],
+                swing: 0,
+                swingSpeed: Math.random() * 0.03 + 0.01,
+            })
+        }
+
+        // Vẽ lá
+        const animate = () => {
+            if (!ctx || !canvas) return
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+            leaves.forEach((leaf) => {
+                ctx.save()
+                ctx.translate(leaf.x + Math.sin(leaf.swing) * 20, leaf.y)
+                ctx.rotate((leaf.rotation * Math.PI) / 180)
+
+                // Vẽ hình lá đơn giản
+                ctx.beginPath()
+                ctx.fillStyle = leaf.color
+                ctx.moveTo(0, -leaf.size / 2)
+                ctx.bezierCurveTo(leaf.size / 2, -leaf.size / 4, leaf.size / 2, leaf.size / 4, 0, leaf.size / 2)
+                ctx.bezierCurveTo(-leaf.size / 2, leaf.size / 4, -leaf.size / 2, -leaf.size / 4, 0, -leaf.size / 2)
+                ctx.fill()
+
+                // Vẽ gân lá
+                ctx.beginPath()
+                ctx.strokeStyle = "rgba(0, 0, 0, 0.3)"
+                ctx.lineWidth = 1
+                ctx.moveTo(0, -leaf.size / 2)
+                ctx.lineTo(0, leaf.size / 2)
+                ctx.stroke()
+
+                ctx.restore()
+
+                leaf.y += leaf.speed
+                leaf.rotation += leaf.rotationSpeed
+                leaf.swing += leaf.swingSpeed
+
+                // Nếu lá rơi ra khỏi màn hình, đặt lại vị trí
+                if (leaf.y > canvas.height) {
+                    leaf.y = -leaf.size
+                    leaf.x = Math.random() * canvas.width
+                }
+            })
+
+            requestAnimationFrame(animate)
+        }
+
+        const animationId = requestAnimationFrame(animate)
+
+        // Xử lý thay đổi kích thước màn hình
+        const handleResize = () => {
+            if (!canvas) return
+            canvas.width = window.innerWidth
+            canvas.height = window.innerHeight
+        }
+
+        window.addEventListener("resize", handleResize)
+
+        return () => {
+            window.removeEventListener("resize", handleResize)
+            cancelAnimationFrame(animationId)
+        }
+    }, [weather])
+
+    // Hiệu ứng sương mù
+    useEffect(() => {
+        if (weather !== "fog" || !canvasRef.current) return
+
+        const canvas = canvasRef.current
+        const ctx = canvas.getContext("2d")
+        if (!ctx) return
+
+        canvas.width = window.innerWidth
+        canvas.height = window.innerHeight
+
+        const fogParticles: { x: number; y: number; radius: number; opacity: number; speed: number }[] = []
+        const particleCount = 50
+
+        // Tạo các hạt sương mù
+        for (let i = 0; i < particleCount; i++) {
+            fogParticles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                radius: Math.random() * 100 + 50,
+                opacity: Math.random() * 0.3 + 0.1,
+                speed: Math.random() * 0.5 + 0.1,
+            })
+        }
+
+        // Vẽ sương mù
+        const animate = () => {
+            if (!ctx || !canvas) return
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+            // Các hạt sương mù di chuyển
+            fogParticles.forEach((particle) => {
+                const gradient = ctx.createRadialGradient(particle.x, particle.y, 0, particle.x, particle.y, particle.radius)
+                gradient.addColorStop(0, `rgba(255, 255, 255, ${particle.opacity})`)
+                gradient.addColorStop(1, "rgba(255, 255, 255, 0)")
+
+                ctx.beginPath()
+                ctx.fillStyle = gradient
+                ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2)
+                ctx.fill()
+
+                particle.x += particle.speed
+                if (particle.x > canvas.width + particle.radius) {
+                    particle.x = -particle.radius
+                    particle.y = Math.random() * canvas.height
+                }
+            })
+
+            requestAnimationFrame(animate)
+        }
+
+        const animationId = requestAnimationFrame(animate)
+
+        // Xử lý thay đổi kích thước màn hình
+        const handleResize = () => {
+            if (!canvas) return
+            canvas.width = window.innerWidth
+            canvas.height = window.innerHeight
+        }
+
+        window.addEventListener("resize", handleResize)
+
+        return () => {
+            window.removeEventListener("resize", handleResize)
+            cancelAnimationFrame(animationId)
+        }
+    }, [weather])
+
+    // Hiệu ứng sao đêm - phiên bản v21
+    useEffect(() => {
+        if (weather !== "stars" || !canvasRef.current) return
+
+        const canvas = canvasRef.current
+        const ctx = canvas.getContext("2d")
+        if (!ctx) return
+
+        canvas.width = window.innerWidth
+        canvas.height = window.innerHeight
+
+        const stars: { x: number; y: number; size: number; opacity: number; pulse: number; pulseSpeed: number }[] = []
+        const starCount = 200
+
+        // Tạo các ngôi sao
+        for (let i = 0; i < starCount; i++) {
+            stars.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: Math.random() * 2 + 0.5,
+                opacity: Math.random() * 0.5 + 0.3,
+                pulse: Math.random() * Math.PI,
+                pulseSpeed: Math.random() * 0.05 + 0.01,
+            })
+        }
+
+        // Vẽ sao đêm
+        const animate = () => {
+            if (!ctx || !canvas) return
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+            // Vẽ các ngôi sao
+            stars.forEach((star) => {
+                star.pulse += star.pulseSpeed
+                const currentOpacity = star.opacity * (0.5 + 0.5 * Math.sin(star.pulse))
+
+                ctx.beginPath()
+                ctx.fillStyle = `rgba(255, 255, 255, ${currentOpacity})`
+                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2)
+                ctx.fill()
+
+                // Thêm hiệu ứng lấp lánh cho một số sao lớn
+                if (star.size > 1.5) {
+                    ctx.beginPath()
+                    ctx.strokeStyle = `rgba(255, 255, 255, ${currentOpacity * 0.3})`
+                    ctx.lineWidth = 0.5
+
+                    // Vẽ tia sáng
+                    ctx.moveTo(star.x - star.size * 3, star.y)
+                    ctx.lineTo(star.x + star.size * 3, star.y)
+                    ctx.moveTo(star.x, star.y - star.size * 3)
+                    ctx.lineTo(star.x, star.y + star.size * 3)
+
+                    ctx.stroke()
+                }
+            })
+
+            requestAnimationFrame(animate)
+        }
+
+        const animationId = requestAnimationFrame(animate)
+
+        // Xử lý thay đổi kích thước màn hình
+        const handleResize = () => {
+            if (!canvas) return
+            canvas.width = window.innerWidth
+            canvas.height = window.innerHeight
+        }
+
+        window.addEventListener("resize", handleResize)
+
+        return () => {
+            window.removeEventListener("resize", handleResize)
+            cancelAnimationFrame(animationId)
+        }
+    }, [weather])
+
+    // Hiệu ứng pháo hoa - đã cải tiến để không che phủ nền
+    useEffect(() => {
+        if (weather !== "fireworks" || !canvasRef.current) return
+
+        const canvas = canvasRef.current
+        const ctx = canvas.getContext("2d")
+        if (!ctx) return
+
+        canvas.width = window.innerWidth
+        canvas.height = window.innerHeight
+
+        interface Particle {
+            x: number
+            y: number
+            vx: number
+            vy: number
+            alpha: number
+            color: string
+            size: number
+        }
+
+        interface Firework {
+            x: number
+            y: number
+            targetY: number
+            speed: number
+            particles: Particle[]
+            color: string
+            exploded: boolean
+        }
+
+        const fireworks: Firework[] = []
+        const colors = ["#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#FF00FF", "#00FFFF", "#FFFFFF"]
+
+        // Tạo pháo hoa mới
+        const createFirework = () => {
+            const x = Math.random() * canvas.width
+            const color = colors[Math.floor(Math.random() * colors.length)]
+
+            fireworks.push({
+                x,
+                y: canvas.height,
+                targetY: Math.random() * (canvas.height * 0.5) + canvas.height * 0.1,
+                speed: Math.random() * 2 + 1,
+                particles: [],
+                color,
+                exploded: false,
+            })
+
+            // Phát âm thanh pháo hoa nếu được bật
+            if (soundEnabled) {
+                const launchSound = new Audio("/sounds/firework-launch.mp3")
+                launchSound.volume = 0.1
+                launchSound.play().catch((e) => console.log("Firework launch sound failed:", e))
+            }
+
+            // Tạo pháo hoa tiếp theo sau một khoảng thời gian ngẫu nhiên
+            setTimeout(createFirework, Math.random() * 2000 + 500)
+        }
+
+        // Tạo vụ nổ pháo hoa
+        const explodeFirework = (firework: Firework) => {
+            const particleCount = Math.floor(Math.random() * 50) + 30
+
+            for (let i = 0; i < particleCount; i++) {
+                const angle = Math.random() * Math.PI * 2
+                const speed = Math.random() * 5 + 2
+
+                firework.particles.push({
+                    x: firework.x,
+                    y: firework.y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    alpha: 1,
+                    color: firework.color,
+                    size: Math.random() * 2 + 1,
+                })
+            }
+
+            firework.exploded = true
+
+            // Phát âm thanh nổ nếu được bật
+            if (soundEnabled) {
+                const explosionSound = new Audio("/sounds/firework-explosion.mp3")
+                explosionSound.volume = 0.2
+                explosionSound.play().catch((e) => console.log("Firework explosion sound failed:", e))
+            }
+        }
+
+        // Bắt đầu với một vài pháo hoa
+        for (let i = 0; i < 3; i++) {
+            setTimeout(createFirework, Math.random() * 1000)
+        }
+
+        // Vẽ pháo hoa
+        const animate = () => {
+            if (!ctx || !canvas) return
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+            // Cập nhật và vẽ pháo hoa
+            for (let i = 0; i < fireworks.length; i++) {
+                const firework = fireworks[i]
+
+                if (!firework.exploded) {
+                    // Vẽ pháo hoa đang bay lên
+                    ctx.beginPath()
+                    ctx.fillStyle = firework.color
+                    ctx.arc(firework.x, firework.y, 2, 0, Math.PI * 2)
+                    ctx.fill()
+
+                    // Di chuyển pháo hoa lên
+                    firework.y -= firework.speed
+
+                    // Kiểm tra nếu pháo hoa đạt đến độ cao mục tiêu
+                    if (firework.y <= firework.targetY) {
+                        explodeFirework(firework)
+                    }
+                } else {
+                    // Cập nhật và vẽ các hạt pháo hoa
+                    for (let j = 0; j < firework.particles.length; j++) {
+                        const particle = firework.particles[j]
+
+                        // Vẽ hạt
+                        ctx.beginPath()
+                        ctx.globalAlpha = particle.alpha
+                        ctx.fillStyle = particle.color
+                        ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2)
+                        ctx.fill()
+                        ctx.globalAlpha = 1
+
+                        // Cập nhật vị trí
+                        particle.x += particle.vx
+                        particle.y += particle.vy
+
+                        // Thêm trọng lực
+                        particle.vy += 0.1
+
+                        // Giảm dần độ trong suốt
+                        particle.alpha -= 0.01
+                    }
+
+                    // Loại bỏ các hạt đã mờ hoàn toàn
+                    firework.particles = firework.particles.filter((p) => p.alpha > 0)
+
+                    // Loại bỏ pháo hoa nếu không còn hạt nào
+                    if (firework.particles.length === 0) {
+                        fireworks.splice(i, 1)
+                        i--
+                    }
+                }
+            }
+
+            requestAnimationFrame(animate)
+        }
+
+        const animationId = requestAnimationFrame(animate)
+
+        // Xử lý thay đổi kích thước màn hình
+        const handleResize = () => {
+            if (!canvas) return
+            canvas.width = window.innerWidth
+            canvas.height = window.innerHeight
+        }
+
+        window.addEventListener("resize", handleResize)
+
+        return () => {
+            window.removeEventListener("resize", handleResize)
+            cancelAnimationFrame(animationId)
+        }
+    }, [weather, soundEnabled])
+
+    return (
+        <canvas
+            ref={canvasRef}
+            className={`fixed inset-0 pointer-events-none z-[1000] ${weather === "none" ? "hidden" : ""}`}
+            style={{ opacity: 0.8 }} // Giảm độ đậm để không che phủ nền
+        />
+    )
+}

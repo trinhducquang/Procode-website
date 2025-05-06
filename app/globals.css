@@ -2,213 +2,101 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Các biến chủ đề */
 :root {
-  --foreground: 0, 0, 0;
-  --background: 255, 255, 255;
-  --card-background: 249, 250, 251;
-  --card-foreground: 17, 24, 39;
-  --primary-background: 0, 0, 0;
-  --primary-foreground: 255, 255, 255;
-  --muted-foreground: 107, 114, 128;
-  --border: 229, 231, 235;
-  --input-background: 255, 255, 255;
-  --input-foreground: 17, 24, 39;
-  --input-border: 209, 213, 219;
-  --ring: 0, 0, 0;
-  --progress-background: 229, 231, 235;
-  --progress-foreground: 34, 197, 94;
+  --bg-theme: var(--background);
+  --text-theme: var(--foreground);
+  --card-theme: var(--card);
+  --card-text-theme: var(--card-foreground);
+  --primary-theme: var(--primary);
+  --primary-text-theme: var(--primary-foreground);
+  --muted-theme: var(--muted-foreground);
 }
 
-.dark {
-  --foreground: 255, 255, 255;
-  --background: 17, 24, 39;
-  --card-background: 31, 41, 55;
-  --card-foreground: 243, 244, 246;
-  --primary-background: 255, 255, 255;
-  --primary-foreground: 17, 24, 39;
-  --muted-foreground: 156, 163, 175;
-  --border: 55, 65, 81;
-  --input-background: 31, 41, 55;
-  --input-foreground: 243, 244, 246;
-  --input-border: 75, 85, 99;
-  --ring: 255, 255, 255;
-  --progress-background: 55, 65, 81;
-  --progress-foreground: 34, 197, 94;
-}
-
-html,
-body {
-  scroll-behavior: smooth;
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden;
-  position: relative;
-  overscroll-behavior-x: none;
-  color: rgb(var(--foreground));
-  background-color: rgb(var(--background));
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-/* Utility classes for consistent theming */
 .bg-theme {
-  background-color: rgb(var(--background));
+  background-color: hsl(var(--bg-theme));
 }
 
 .text-theme {
-  color: rgb(var(--foreground));
+  color: hsl(var(--text-theme));
 }
 
 .bg-card-theme {
-  background-color: rgb(var(--card-background));
+  background-color: hsl(var(--card-theme));
 }
 
 .text-card-theme {
-  color: rgb(var(--card-foreground));
+  color: hsl(var(--card-text-theme));
 }
 
 .bg-primary-theme {
-  background-color: rgb(var(--primary-background));
+  background-color: hsl(var(--primary-theme));
 }
 
 .text-primary-theme {
-  color: rgb(var(--primary-foreground));
+  color: hsl(var(--primary-text-theme));
 }
 
 .text-muted-theme {
-  color: rgb(var(--muted-foreground));
+  color: hsl(var(--muted-theme));
 }
 
 .border-theme {
-  border-color: rgb(var(--border));
-}
-
-.bg-input-theme {
-  background-color: rgb(var(--input-background));
-}
-
-.text-input-theme {
-  color: rgb(var(--input-foreground));
-}
-
-.border-input-theme {
-  border-color: rgb(var(--input-border));
-}
-
-.ring-theme {
-  --tw-ring-color: rgb(var(--ring));
-}
-
-.bg-progress-theme {
-  background-color: rgb(var(--progress-background));
-}
-
-.bg-progress-fill-theme {
-  background-color: rgb(var(--progress-foreground));
-}
-
-/* Sửa lỗi vuốt trang trên thiết bị di động */
-@media (max-width: 768px) {
-  .container {
-    max-width: 100%;
-    padding-left: 1rem;
-    padding-right: 1rem;
-    width: 100%;
-  }
-
-  #__next,
-  main {
-    width: 100%;
-    overflow-x: hidden;
-  }
-}
-
-/* Tối ưu hiệu suất render */
-* {
-  will-change: auto;
-}
-
-.gpu-accelerated {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  perspective: 1000px;
-}
-
-/* Đảm bảo các section có transition mượt mà */
-section {
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-/* Đảm bảo các phần tử có nền trắng trong light mode và nền tối trong dark mode */
-.bg-white {
-  background-color: rgb(var(--background));
-}
-
-.dark\:bg-\[\#111827\] {
-  background-color: rgb(var(--background));
-}
-
-.bg-gray-50 {
-  background-color: rgb(var(--card-background));
-}
-
-.dark\:bg-gray-800,
-.dark\:bg-gray-900 {
-  background-color: rgb(var(--card-background));
-}
-
-/* Đảm bảo các input có màu sắc phù hợp */
-input,
-textarea {
-  background-color: rgb(var(--input-background));
-  color: rgb(var(--input-foreground));
-  border-color: rgb(var(--input-border));
-}
-
-/* Đảm bảo các button có màu sắc phù hợp */
-button.bg-black {
-  background-color: rgb(var(--primary-background));
-  color: rgb(var(--primary-foreground));
-}
-
-.dark button.bg-white {
-  background-color: rgb(var(--primary-background));
-  color: rgb(var(--primary-foreground));
-}
-
-/* Đảm bảo hero section có màu sắc phù hợp */
-.hero-overlay {
-  background-color: rgba(0, 0, 0, 0.4);
-}
-
-.dark .hero-overlay {
-  background-color: rgba(0, 0, 0, 0.6);
-}
-
-/* Đảm bảo footer có màu sắc phù hợp */
-footer {
-  background-color: rgb(var(--card-background));
-}
-
-/* Đảm bảo footer có màu sắc phù hợp */
-footer {
-  background-color: rgb(var(--card-background));
-  color: rgb(var(--foreground));
-  border-color: rgb(var(--border));
-}
-
-/* Đảm bảo mobile menu có màu sắc phù hợp */
-.mobile-menu {
-  background-color: rgb(var(--background));
-  color: rgb(var(--foreground));
-}
-
-/* Đảm bảo các section có màu sắc phù hợp */
-section.bg-black {
-  background-color: rgb(var(--background));
-}
-
-/* Đảm bảo các card có màu sắc phù hợp */
-.card {
-  background-color: rgb(var(--card-background));
-  color: rgb(var(--card-foreground));
+  border-color: hsl(var(--border));
 }

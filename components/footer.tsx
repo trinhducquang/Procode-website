@@ -3,6 +3,7 @@
 import { Facebook, Twitter, Instagram, Dribbble } from "lucide-react"
 import { motion } from "framer-motion"
 import { useI18n } from "@/lib/i18n/i18n-context"
+import Link from "next/link"
 
 export default function Footer() {
   const { t } = useI18n()
@@ -12,6 +13,10 @@ export default function Footer() {
         <div className="container mx-auto px-4">
           <div className="max-w-5xl mx-auto">
             <div className="flex flex-col items-center">
+              <Link href="/" className="text-xl font-bold text-theme mb-6">
+                Procode
+              </Link>
+
               <div className="flex space-x-6 mb-6">
                 <motion.a
                     href="#"

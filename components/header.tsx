@@ -72,7 +72,7 @@ export default function Header() {
       >
         <div className="container mx-auto flex items-center justify-between h-16 px-4 md:px-6">
           <Link href="/" className={cn("text-xl font-bold transition-colors", scrolled ? "text-theme" : "text-white")}>
-            DEW.
+            Procode
           </Link>
 
           <div className="flex items-center space-x-2">

@@ -33,5 +33,13 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
     return () => observer.disconnect()
   }, [])
 
-  return <NextThemesProvider {...props}>{children}</NextThemesProvider>
+  return (
+      <NextThemesProvider
+          {...props}
+          enableSystem={false} // Tắt chế độ lấy theme từ thiết bị
+          defaultTheme="light" // Mặc định là chế độ sáng
+      >
+        {children}
+      </NextThemesProvider>
+  )
 }

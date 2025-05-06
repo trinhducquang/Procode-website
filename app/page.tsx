@@ -9,21 +9,29 @@ import Testimonial from "@/components/testimonial"
 import BlogSection from "@/components/blog-section"
 import Contact from "@/components/contact"
 import Footer from "@/components/footer"
+import StructuredData from "./structured-data"
+import WeatherEffects from "@/components/weather-effects"
+import WeatherControl from "@/components/weather-control"
+import SoundToggle from "@/components/sound-toggle"
 
 export default function Home() {
-  return (
-    <main className="min-h-screen">
-      <Header />
-      <Hero />
-      <About />
-      <Skills />
-      <Portfolio />
-      <Services />
-      <HireMe />
-      <Testimonial />
-      <BlogSection />
-      <Contact />
-      <Footer />
-    </main>
-  )
+    return (
+        <main className="min-h-screen">
+            <StructuredData />
+            <Header />
+            <Hero />
+            <About />
+            <Skills />
+            <Portfolio />
+            <Services />
+            <HireMe />
+            <Testimonial />
+            <BlogSection />
+            <Contact />
+            <Footer />
+            <WeatherEffects />
+            <WeatherControl />
+            <SoundToggle />
+        </main>
+    )
 }

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { useEffect, useState } from "react"
 
 export function ThemeToggle() {
-  const { resolvedTheme, setTheme } = useTheme()
+  const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
   // Đảm bảo component chỉ render ở client side
@@ -19,11 +19,11 @@ export function ThemeToggle() {
   }
 
   const toggleTheme = () => {
-    const newTheme = resolvedTheme === "dark" ? "light" : "dark"
+    const newTheme = theme === "dark" ? "light" : "dark"
     setTheme(newTheme)
   }
 
-  const isDark = resolvedTheme === "dark"
+  const isDark = theme === "dark"
 
   return (
       <Button
