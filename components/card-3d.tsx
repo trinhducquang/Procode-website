@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useRef, type ReactNode } from "react"
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion"
 
@@ -27,14 +26,21 @@ export default function Card3D({ children, className = "" }: Card3DProps) {
   const rotateX = useTransform(smoothMouseY, [-0.5, 0.5], ["15deg", "-15deg"])
   const rotateY = useTransform(smoothMouseX, [-0.5, 0.5], ["-15deg", "15deg"])
 
-  // Glare effect
-  const glareAngle = useTransform(
-    [smoothMouseX, smoothMouseY],
-    ([latestX, latestY]) => Math.atan2(latestY, latestX) * (180 / Math.PI),
-  )
-  const glareOpacity = useTransform([smoothMouseX, smoothMouseY], ([latestX, latestY]) => {
+  // Glare effect - FIXED: Using the correct useTransform overloads
+  // Option 1: Use useTransform with each motion value separately and combine in a regular function
+  const angleCalc = () => {
+    const x = smoothMouseX.get()
+    const y = smoothMouseY.get()
+    return Math.atan2(y, x) * (180 / Math.PI)
+  }
+  const glareAngle = useTransform([smoothMouseX, smoothMouseY], () => angleCalc())
+
+  // Option 2: Alternative implementation that also works
+  const glareOpacity = useTransform([smoothMouseX, smoothMouseY], () => {
     const maxOpacity = 0.2
-    const distance = Math.sqrt(latestX * latestX + latestY * latestY)
+    const x = smoothMouseX.get()
+    const y = smoothMouseY.get()
+    const distance = Math.sqrt(x * x + y * y)
     return Math.min(distance * 2, maxOpacity)
   })
 
@@ -55,35 +61,35 @@ export default function Card3D({ children, className = "" }: Card3DProps) {
   }
 
   return (
-    <motion.div
-      ref={ref}
-      className={`relative overflow-hidden ${className}`}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => {
-        setHovered(false)
-        mouseX.set(0)
-        mouseY.set(0)
-      }}
-      style={{
-        rotateX,
-        rotateY,
-        transformStyle: "preserve-3d",
-        transformPerspective: "1000px",
-      }}
-    >
-      {children}
-
-      {/* Glare effect */}
-      {hovered && (
-        <motion.div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: `linear-gradient(${glareAngle}deg, rgba(255, 255, 255, ${glareOpacity}) 0%, rgba(255, 255, 255, 0) 80%)`,
-            opacity: glareOpacity,
+      <motion.div
+          ref={ref}
+          className={`relative overflow-hidden ${className}`}
+          onMouseMove={handleMouseMove}
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => {
+            setHovered(false)
+            mouseX.set(0)
+            mouseY.set(0)
           }}
-        />
-      )}
-    </motion.div>
+          style={{
+            rotateX,
+            rotateY,
+            transformStyle: "preserve-3d",
+            transformPerspective: "1000px",
+          }}
+      >
+        {children}
+
+        {/* Glare effect */}
+        {hovered && (
+            <motion.div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background: `linear-gradient(${glareAngle}deg, rgba(255, 255, 255, ${glareOpacity}) 0%, rgba(255, 255, 255, 0) 80%)`,
+                  opacity: glareOpacity,
+                }}
+            />
+        )}
+      </motion.div>
   )
 }

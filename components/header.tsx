@@ -1,3 +1,4 @@
+
 "use client"
 
 import Link from "next/link"
@@ -60,6 +61,16 @@ export default function Header() {
     }
   }, [handleScroll])
 
+  // Xử lý sự kiện click cho navigation item
+  const handleNavClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault()
+    const targetId = href.replace("#", "")
+    const element = document.getElementById(targetId)
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" })
+    }
+  }, [])
+
   return (
       <motion.header
           className={cn(
@@ -99,6 +110,7 @@ export default function Header() {
                                       ? "text-white font-bold"
                                       : "text-white/80 hover:text-white",
                           )}
+                          onClick={(e) => handleNavClick(e, item.href)}
                       >
                         {item.name}
                       </Link>
@@ -108,7 +120,12 @@ export default function Header() {
             </nav>
             <LanguageSwitcher />
             <ThemeToggle />
-            <MobileMenu navItems={navItems} activeSection={activeSection} scrolled={scrolled} />
+            <MobileMenu
+                navItems={navItems}
+                activeSection={activeSection}
+                scrolled={scrolled}
+                onNavClick={handleNavClick}
+            />
           </div>
         </div>
       </motion.header>
