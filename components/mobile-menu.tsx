@@ -1,34 +1,28 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import { Menu, X } from "lucide-react"
 import { useI18n } from "@/lib/i18n/i18n-context"
+import LanguageDropdown from "./language-dropdown"
 
 interface MobileMenuProps {
   navItems: Array<{ name: string; href: string; active: boolean }>
   activeSection: string
   scrolled: boolean
+  onNavClick: (e: React.MouseEvent<HTMLAnchorElement>, href: string) => void
 }
 
-export default function MobileMenu({ navItems, activeSection, scrolled }: MobileMenuProps) {
+export default function MobileMenu({ navItems, activeSection, scrolled, onNavClick }: MobileMenuProps) {
   const { t, locale, setLocale } = useI18n()
   const [isOpen, setIsOpen] = useState(false)
-  const [isLanguageOpen, setIsLanguageOpen] = useState(false)
-
-  const languages = [
-    { code: "en", name: t.languageSwitcher.en, flag: "🇬🇧" },
-    { code: "ja", name: t.languageSwitcher.ja, flag: "🇯🇵" },
-    { code: "vi", name: t.languageSwitcher.vi, flag: "🇻🇳" },
-  ]
-
-  const currentLanguage = languages.find((lang) => lang.code === locale) || languages[0]
 
   // Đóng menu khi chuyển section
   useEffect(() => {
     setIsOpen(false)
-    setIsLanguageOpen(false)
   }, [activeSection])
 
   // Khóa scroll khi menu mở
@@ -44,7 +38,6 @@ export default function MobileMenu({ navItems, activeSection, scrolled }: Mobile
   }, [isOpen])
 
   const toggleMenu = () => setIsOpen(!isOpen)
-  const toggleLanguage = () => setIsLanguageOpen(!isLanguageOpen)
 
   const menuVariants = {
     closed: {
@@ -100,13 +93,20 @@ export default function MobileMenu({ navItems, activeSection, scrolled }: Mobile
                     animate="open"
                     exit="closed"
                     variants={menuVariants}
-                    className="fixed top-0 left-0 bottom-0 w-full max-w-sm bg-theme shadow-xl z-[10000] overflow-hidden mobile-menu"
+                    className="fixed top-0 right-0 bottom-0 w-full max-w-sm bg-theme shadow-xl z-[10000] overflow-y-auto mobile-menu"
                     onClick={(e) => e.stopPropagation()}
                     style={{ height: "100vh", position: "fixed" }}
                 >
                   <div className="flex justify-between items-center p-6 border-b border-theme sticky top-0 bg-theme z-10">
-                    <Link href="/" className="text-xl font-bold text-theme">
-                      Procode
+                    <Link
+                        href="/#top"
+                        className="text-xl font-bold text-theme"
+                        onClick={(e) => {
+                          onNavClick(e, "/#top")
+                          toggleMenu()
+                        }}
+                    >
+                      DEW.
                     </Link>
                     <button
                         onClick={toggleMenu}
@@ -117,14 +117,13 @@ export default function MobileMenu({ navItems, activeSection, scrolled }: Mobile
                     </button>
                   </div>
 
-                  <div
-                      className="relative z-10 custom-scrollbar"
-                      style={{ maxHeight: "calc(100vh - 80px)", overflowY: "auto" }}
-                  >
+                  <div className="relative z-10">
                     <nav className="p-6">
                       {navItems.map((item) => {
                         const isActive =
-                            item.href === "#" ? activeSection === "" : activeSection === item.href.replace("#", "")
+                            item.href === "/#top"
+                                ? activeSection === "" || activeSection === "top"
+                                : activeSection === item.href.replace("/#", "")
 
                         return (
                             <motion.div key={item.name} variants={itemVariants}>
@@ -133,7 +132,10 @@ export default function MobileMenu({ navItems, activeSection, scrolled }: Mobile
                                   className={`block py-4 text-lg font-medium border-b border-theme ${
                                       isActive ? "text-theme font-bold" : "text-muted-theme hover:text-theme"
                                   }`}
-                                  onClick={toggleMenu}
+                                  onClick={(e) => {
+                                    onNavClick(e, item.href)
+                                    toggleMenu()
+                                  }}
                               >
                                 {item.name}
                               </Link>
@@ -145,51 +147,14 @@ export default function MobileMenu({ navItems, activeSection, scrolled }: Mobile
                     <motion.div variants={itemVariants} className="p-6 mt-4">
                       <div className="flex justify-between items-center mb-4">
                         <div className="text-theme font-medium">Ngôn ngữ</div>
-                        <div className="relative">
-                          <button
-                              onClick={toggleLanguage}
-                              className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                          >
-                            <span className="text-lg">{currentLanguage.flag}</span>
-                            <span className="text-theme">{currentLanguage.name}</span>
-                          </button>
-
-                          <AnimatePresence>
-                            {isLanguageOpen && (
-                                <motion.div
-                                    className="absolute left-0 right-0 bottom-full mb-2 rounded-md shadow-lg bg-card-theme ring-1 ring-black ring-opacity-5 z-50"
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: 10 }}
-                                    transition={{ duration: 0.2 }}
-                                >
-                                  <div className="py-1" role="menu" aria-orientation="vertical">
-                                    {languages.map((lang) => (
-                                        <button
-                                            key={lang.code}
-                                            className={`w-full text-left px-4 py-2 text-sm flex items-center space-x-2 ${
-                                                locale === lang.code
-                                                    ? "bg-gray-100 dark:bg-gray-700 text-theme"
-                                                    : "text-muted-theme hover:bg-gray-100 dark:hover:bg-gray-700"
-                                            }`}
-                                            onClick={() => {
-                                              setLocale(lang.code as "en" | "ja" | "vi")
-                                              setIsLanguageOpen(false)
-                                            }}
-                                            role="menuitem"
-                                        >
-                                          <span className="text-lg">{lang.flag}</span>
-                                          <span>{lang.name}</span>
-                                        </button>
-                                    ))}
-                                  </div>
-                                </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </div>
+                        <LanguageDropdown
+                            currentLanguage={locale}
+                            onLanguageChange={(code) => setLocale(code as "en" | "ja" | "vi")}
+                            isMobile={true}
+                        />
                       </div>
 
-                      <div className="flex space-x-4 justify-center">
+                      <div className="flex space-x-4 justify-center mt-6">
                         <a
                             href="#"
                             className="w-10 h-10 rounded-full flex items-center justify-center bg-card-theme text-muted-theme hover:text-theme transition-colors"
