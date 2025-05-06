@@ -26,17 +26,14 @@ export default function Header() {
     { name: t.nav.contact, href: "#contact", active: false },
   ]
 
-  // Sử dụng hook smooth scroll
   useSmoothScroll()
 
-  // Tối ưu hóa hàm handleScroll bằng useCallback
   const handleScroll = useCallback(() => {
     const isScrolled = window.scrollY > 10
     if (isScrolled !== scrolled) {
       setScrolled(isScrolled)
     }
 
-    // Xác định section hiện tại đang hiển thị
     const sections = navItems.map((item) => item.href.replace("#", "")).filter(Boolean)
 
     for (const section of sections) {
