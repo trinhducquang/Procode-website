@@ -69,8 +69,6 @@ export default function Testimonial() {
     } else if (info.offset.x < -100) {
       nextSlide()
     }
-
-    // Khởi động lại timer sau khi vuốt
     startSlideTimer()
   }
 

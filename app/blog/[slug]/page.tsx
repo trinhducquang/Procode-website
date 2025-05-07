@@ -3,8 +3,8 @@
 import Image from "next/image"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
+import {use} from "react";
 
-// Dữ liệu mẫu cho các bài viết blog
 const blogPosts = [
   {
     id: 1,
@@ -50,11 +50,9 @@ const blogPosts = [
   },
 ]
 
-export default function BlogPost({ params }: { params: { slug: string } }) {
-  // Tìm bài viết dựa trên slug
-  const post = blogPosts.find((post) => post.slug === params.slug)
-
-  // Nếu không tìm thấy bài viết
+export default function BlogPost({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = use(params)
+  const post = blogPosts.find((post) => post.slug === slug)
   if (!post) {
     return (
         <div className="min-h-screen flex items-center justify-center bg-theme">

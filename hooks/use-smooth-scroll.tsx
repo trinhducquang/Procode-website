@@ -6,20 +6,25 @@ export function useSmoothScroll() {
   useEffect(() => {
     const handleAnchorClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement
-      const anchor = target.closest('a[href^="#"]')
+      const anchor = target.closest('a[href^="#"]') as HTMLAnchorElement | null
 
       if (!anchor) return
 
-      e.preventDefault()
-
       const targetId = anchor.getAttribute("href")
       if (!targetId) return
+
+      e.preventDefault()
+
+      if (targetId === "#") {
+        window.scrollTo({ top: 0, behavior: "smooth" })
+        return
+      }
 
       const targetElement = document.querySelector(targetId)
       if (!targetElement) return
 
       window.scrollTo({
-        top: targetElement.getBoundingClientRect().top + window.scrollY - 80, // Trừ đi chiều cao của header
+        top: targetElement.getBoundingClientRect().top + window.scrollY - 80,
         behavior: "smooth",
       })
     }
