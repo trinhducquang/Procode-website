@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import Image from "next/image"
-import { motion, AnimatePresence, useAnimation, type PanInfo } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 
 const testimonials = [
   {
@@ -30,9 +30,10 @@ const testimonials = [
 
 export default function Testimonial() {
   const [activeIndex, setActiveIndex] = useState(0)
-  const controls = useAnimation()
   const slideInterval = useRef<NodeJS.Timeout | null>(null)
   const slideDelay = 5000 // 5 seconds
+  const touchStartX = useRef<number | null>(null)
+  const touchEndX = useRef<number | null>(null)
 
   // Tự động chuyển slide
   useEffect(() => {
@@ -63,12 +64,70 @@ export default function Testimonial() {
     setActiveIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length)
   }
 
-  const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    if (info.offset.x > 100) {
-      prevSlide()
-    } else if (info.offset.x < -100) {
-      nextSlide()
+  // Xử lý sự kiện cảm ứng để thực hiện vuốt
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.touches[0].clientX
+  }
+
+  const handleTouchEnd = () => {
+    if (!touchStartX.current || !touchEndX.current) return
+
+    const diff = touchStartX.current - touchEndX.current
+    const minSwipeDistance = 50 // Khoảng cách tối thiểu để nhận diện vuốt
+
+    if (Math.abs(diff) >= minSwipeDistance) {
+      if (diff > 0) {
+        // Vuốt từ phải sang trái -> Slide tiếp theo
+        nextSlide()
+      } else {
+        // Vuốt từ trái sang phải -> Slide trước đó
+        prevSlide()
+      }
     }
+
+    // Reset giá trị
+    touchStartX.current = null
+    touchEndX.current = null
+    startSlideTimer()
+  }
+
+  // Xử lý sự kiện chuột để thực hiện vuốt (cho desktop)
+  const mouseStartX = useRef<number | null>(null)
+  const mouseEndX = useRef<number | null>(null)
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    mouseStartX.current = e.clientX
+  }
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (mouseStartX.current !== null) {
+      mouseEndX.current = e.clientX
+    }
+  }
+
+  const handleMouseUp = () => {
+    if (!mouseStartX.current || !mouseEndX.current) return
+
+    const diff = mouseStartX.current - mouseEndX.current
+    const minSwipeDistance = 50 // Khoảng cách tối thiểu để nhận diện vuốt
+
+    if (Math.abs(diff) >= minSwipeDistance) {
+      if (diff > 0) {
+        // Vuốt từ phải sang trái -> Slide tiếp theo
+        nextSlide()
+      } else {
+        // Vuốt từ trái sang phải -> Slide trước đó
+        prevSlide()
+      }
+    }
+
+    // Reset giá trị
+    mouseStartX.current = null
+    mouseEndX.current = null
     startSlideTimer()
   }
 
@@ -86,18 +145,22 @@ export default function Testimonial() {
 
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
-            <motion.div
-                drag="x"
-                dragConstraints={{ left: 0, right: 0 }}
-                onDragEnd={handleDragEnd}
-                className="cursor-grab active:cursor-grabbing"
+            <div 
+              className="relative overflow-hidden cursor-grab active:cursor-grabbing"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
             >
-              <AnimatePresence mode="wait">
+              <AnimatePresence initial={false} mode="wait">
                 <motion.div
                     key={activeIndex}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
+                    initial={{ opacity: 0, x: 100 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -100 }}
                     transition={{ duration: 0.5 }}
                     className="py-8"
                 >
@@ -108,9 +171,9 @@ export default function Testimonial() {
                   <blockquote className="text-2xl italic mb-8">"{testimonials[activeIndex].quote}"</blockquote>
                 </motion.div>
               </AnimatePresence>
-            </motion.div>
+            </div>
 
-            <div className="flex justify-center space-x-2">
+            <div className="flex justify-center space-x-2 mt-4">
               {testimonials.map((_, index) => (
                   <button
                       key={index}
