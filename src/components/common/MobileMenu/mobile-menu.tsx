@@ -5,7 +5,7 @@ import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import { Menu, X } from "lucide-react"
 import { useI18n } from "@/lib/i18n/i18n-context"
-import LanguageDropdown from "./language-dropdown"
+import LanguageDropdown from "../LanguageDropdown/language-dropdown"
 
 interface MobileMenuProps {
   navItems: Array<{ name: string; href: string; active: boolean }>

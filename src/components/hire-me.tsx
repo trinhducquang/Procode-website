@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { AnimatedSection } from "./animated-section"
+import { AnimatedSection } from "@/components/common/AnimatedSection/animated-section"
 import { useTextReveal } from "@/hooks/use-text-reveal"
 import { Magnetic } from "@/hooks/use-magnetic"
 import { useI18n } from "@/lib/i18n/i18n-context"

@@ -2,9 +2,9 @@
 
 import { Facebook, Twitter, Instagram, Dribbble } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { AnimatedSection } from "./animated-section"
-import { StaggeredChildren } from "./staggered-children"
-import { StaggeredItem } from "./staggered-item"
+import { AnimatedSection } from "@/components/common/AnimatedSection/animated-section"
+import { StaggeredChildren } from "@/components/common/StaggeredChildren/staggered-children"
+import { StaggeredItem } from "@/components/common/StaggeredItem/staggered-item"
 import { useState, useEffect, useRef } from "react"
 import { useInView } from "framer-motion"
 import { useI18n } from "@/lib/i18n/i18n-context"

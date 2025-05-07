@@ -3,10 +3,10 @@
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { StaggeredChildren } from "./staggered-children"
-import { StaggeredItem } from "./staggered-item"
+import { StaggeredChildren } from "@/components/common/StaggeredChildren/staggered-children"
+import { StaggeredItem } from "@/components/common/StaggeredItem/staggered-item"
 import { useTextReveal } from "@/hooks/use-text-reveal"
-import Card3D from "./card-3d"
+import Card3D from "@/components/common/Card3D/card-3d"
 import { Magnetic } from "@/hooks/use-magnetic"
 
 const blogPosts = [

@@ -1,4 +1,3 @@
-
 "use client"
 
 import Link from "next/link"
@@ -6,9 +5,9 @@ import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
 import { useEffect, useState, useCallback } from "react"
 import { useSmoothScroll } from "@/hooks/use-smooth-scroll"
-import { ThemeToggle } from "./theme-toggle"
-import MobileMenu from "./mobile-menu"
-import LanguageSwitcher from "./language-switcher"
+import { ThemeToggle } from "@/components/theme-toggle"
+import MobileMenu from "../MobileMenu/mobile-menu"
+import LanguageSwitcher from "../LanguageSwitcher/language-switcher"
 import { useI18n } from "@/lib/i18n/i18n-context"
 
 export default function Header() {

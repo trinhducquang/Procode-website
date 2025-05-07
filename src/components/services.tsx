@@ -1,10 +1,10 @@
 "use client"
 
 import { Layers, FlaskRoundIcon as Flask, Heart, Diamond, Workflow, Zap } from "lucide-react"
-import { StaggeredChildren } from "./staggered-children"
-import { StaggeredItem } from "./staggered-item"
+import { StaggeredChildren } from "@/components/common/StaggeredChildren/staggered-children"
+import { StaggeredItem } from "@/components/common/StaggeredItem/staggered-item"
 import { useTextReveal } from "@/hooks/use-text-reveal"
-import Card3D from "./card-3d"
+import Card3D from "@/components/common/Card3D/card-3d"
 import { useI18n } from "@/lib/i18n/i18n-context"
 
 export default function Services() {

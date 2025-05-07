@@ -1,7 +1,7 @@
 "use client"
 
 import { useCountUp } from "@/hooks/use-count-up"
-import { AnimatedSection } from "./animated-section"
+import { AnimatedSection } from "@/components/common/AnimatedSection/animated-section"
 
 const skills = [
   { name: "HTML5", percentage: 96 },
