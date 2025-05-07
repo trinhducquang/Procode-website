@@ -1,12 +1,19 @@
 "use client"
 
-import { useEffect, useRef } from "react"
-import { useWeather } from "@/lib/weather/weather-context"
+import { useEffect, useRef, useState } from "react"
+import { useWeather, type WeatherType } from "@/lib/weather/weather-context"
 
 export default function WeatherEffects() {
-    const { weather, soundEnabled } = useWeather()
+    const { weather, soundEnabled, hasUserInteracted, setHasUserInteracted } = useWeather()
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const audioRef = useRef<HTMLAudioElement | null>(null)
+    const [audioLoaded, setAudioLoaded] = useState<boolean>(false)
+    const userInteractionRef = useRef<boolean>(false)
+
+    // Theo dõi hasUserInteracted bằng ref để dễ truy cập trong event listeners
+    useEffect(() => {
+        userInteractionRef.current = hasUserInteracted
+    }, [hasUserInteracted])
 
     // Xóa canvas ngay khi weather thay đổi
     useEffect(() => {
@@ -20,6 +27,25 @@ export default function WeatherEffects() {
             }
         }
     }, [weather])
+
+    // Thêm sự kiện di chuột trên canvas để xác định tương tác
+    useEffect(() => {
+        if (!canvasRef.current) return;
+        
+        const handleCanvasInteraction = () => {
+            if (!userInteractionRef.current) {
+                console.log("Canvas interaction detected");
+                setHasUserInteracted();
+            }
+        };
+        
+        const canvas = canvasRef.current;
+        canvas.addEventListener('mousemove', handleCanvasInteraction);
+        
+        return () => {
+            canvas.removeEventListener('mousemove', handleCanvasInteraction);
+        };
+    }, [setHasUserInteracted]);
 
     // Xử lý âm thanh
     useEffect(() => {
@@ -35,90 +61,81 @@ export default function WeatherEffects() {
                 }
                 audioRef.current = null
             }
+            setAudioLoaded(false)
             return
         }
 
-        let audioSrc = ""
-        switch (weather) {
-            case "rain":
-                audioSrc = "/sounds/rain.mp3"
-                break
-            case "snow":
-                audioSrc = "/sounds/snow.mp3"
-                break
-            case "leaves":
-                audioSrc = "/sounds/wind.mp3"
-                break
-            case "fog":
-                audioSrc = "/sounds/fog.mp3"
-                break
-            case "stars":
-                audioSrc = "/sounds/night.mp3"
-                console.log("Stars effect selected, audio source:", audioSrc)
-                break
-            case "fireworks":
-                audioSrc = "/sounds/fireworks.mp3"
-                break
-            default:
-                audioSrc = ""
+        // Nếu người dùng chưa tương tác với trang, chỉ tải âm thanh nhưng chưa phát
+        if (!hasUserInteracted) {
+            console.log("User has not interacted yet - preparing audio but not playing");
+            // Vẫn tạo audio nhưng không tự động phát
+            let audioSrc = getAudioSource(weather);
+            if (audioSrc && !audioRef.current) {
+                audioRef.current = new Audio(audioSrc);
+                audioRef.current.loop = true;
+                audioRef.current.volume = 0.3;
+                audioRef.current.preload = "auto";
+                audioRef.current.load();
+                setAudioLoaded(true);
+            }
+            return;
         }
+
+        function getAudioSource(currentWeather: WeatherType): string {
+            switch (currentWeather) {
+                case "rain":
+                    return "/sounds/rain.mp3"
+                case "snow":
+                    return "/sounds/snow.mp3"
+                case "leaves":
+                    return "/sounds/wind.mp3"
+                case "fog":
+                    return "/sounds/fog.mp3"
+                case "stars":
+                    return "/sounds/night.mp3"
+                case "fireworks":
+                    return "/sounds/fireworks.mp3"
+                default:
+                    return ""
+            }
+        }
+
+        let audioSrc = getAudioSource(weather);
+        console.log(`Audio processing for ${weather}, source: ${audioSrc}, enabled: ${soundEnabled}, user interacted: ${hasUserInteracted}`);
 
         // Nếu không có file âm thanh, không làm gì cả
         if (!audioSrc) {
             if (audioRef.current) {
                 audioRef.current.pause()
                 audioRef.current = null
+                setAudioLoaded(false)
             }
             return;
         }
-
-        // Hàm tạo và cấu hình âm thanh
-        const setupAudio = (src: string) => {
-            console.log("Setting up audio with source:", src)
-            const audio = new Audio(src);
-            
-            // Đặt thuộc tính trước khi phát
-            audio.loop = true;
-            audio.volume = 0.3;
-            
-            // Thêm event listener để theo dõi trạng thái
-            audio.addEventListener('canplaythrough', () => {
-                console.log(`Audio ${src} ready to play through`);
-            });
-            
-            audio.addEventListener('play', () => {
-                console.log(`Audio ${src} started playing`);
-            });
-            
-            // Ngăn chặn sự kiện ended gây refresh trang
-            audio.onended = () => {
-                console.log(`Audio ${src} ended, attempting to replay`);
-                // Nếu loop = true mà âm thanh vẫn kết thúc, hãy phát lại
-                if (audio.loop && soundEnabled) {
-                    audio.currentTime = 0;
-                    audio.play().catch(err => console.log("Error replaying audio:", err));
-                }
-            };
-            
-            // Xử lý lỗi khi phát âm thanh
-            audio.onerror = () => {
-                console.log(`Audio error occurred with ${src}, code:`, audio.error?.code);
-            };
-            
-            return audio;
-        };
 
         try {
             const currentSrc = audioRef.current ? audioRef.current.src : "";
             const newSrc = new URL(audioSrc, window.location.href).href;
             
-            console.log("Weather:", weather, "Current audio src:", currentSrc, "New src:", newSrc);
-            
-            // Kiểm tra đặc biệt cho hiệu ứng sao đêm
-            if (weather === "stars") {
-                console.log("Preparing stars audio effect, enabled:", soundEnabled);
+            // Nếu âm thanh đã tải và người dùng mới tương tác, phát ngay
+            if (audioLoaded && hasUserInteracted && audioRef.current && audioRef.current.paused) {
+                console.log("User has interacted, playing previously loaded audio");
+                // Thêm xử lý để đảm bảo âm thanh phát khi di chuột
+                const playAudio = () => {
+                    if (audioRef.current) {
+                        audioRef.current.play().catch(err => {
+                            console.log("Error playing audio after interaction:", err);
+                            // Thử lại sau một khoảng thời gian ngắn
+                            if (hasUserInteracted && soundEnabled) {
+                                setTimeout(playAudio, 500);
+                            }
+                        });
+                    }
+                };
+                playAudio();
+                return;
             }
-            
+
             // Nếu đang phát cùng một file âm thanh, không làm gì cả
             if (currentSrc === newSrc && audioRef.current && !audioRef.current.paused) {
                 console.log("Already playing the correct audio file");
@@ -139,25 +156,78 @@ export default function WeatherEffects() {
             
             // Tạo và phát file âm thanh mới
             console.log("Creating new audio:", audioSrc);
-            audioRef.current = setupAudio(audioSrc);
             
-            // Thử phát với preload
-            audioRef.current.preload = "auto";
-            audioRef.current.load();
+            const audio = new Audio(audioSrc);
+            audioRef.current = audio;
             
-            // Đảm bảo âm thanh được phát
-            setTimeout(() => {
-                if (audioRef.current) {
-                    console.log("Attempting to play audio after delay");
-                    audioRef.current.play().catch(err => {
-                        console.log("Error playing audio:", err);
-                        // Xử lý lỗi khi trình duyệt chặn tự động phát
-                        if (err.name === "NotAllowedError") {
-                            console.log("Autoplay prevented by browser. User interaction required.");
-                        }
-                    });
+            // Đặt thuộc tính trước khi phát
+            audio.loop = true;
+            audio.volume = 0.3;
+            audio.preload = "auto";
+            
+            // Thêm event listener để theo dõi trạng thái
+            audio.addEventListener('canplaythrough', () => {
+                console.log(`Audio ${audioSrc} ready to play through`);
+                setAudioLoaded(true);
+                
+                // Chỉ phát nếu người dùng đã tương tác
+                if (hasUserInteracted && soundEnabled) {
+                    console.log("User has interacted, playing audio immediately after load");
+                    const playAudio = () => {
+                        audio.play().catch(err => {
+                            console.log("Error playing audio:", err);
+                            // Thử phát lại nếu gặp lỗi
+                            if (hasUserInteracted && soundEnabled) {
+                                setTimeout(playAudio, 500);
+                            }
+                        });
+                    };
+                    playAudio();
                 }
-            }, 200);
+            });
+            
+            audio.addEventListener('play', () => {
+                console.log(`Audio ${audioSrc} started playing`);
+            });
+            
+            // Ngăn chặn sự kiện ended gây refresh trang
+            audio.onended = () => {
+                console.log(`Audio ${audioSrc} ended, attempting to replay`);
+                if (audio.loop && soundEnabled && hasUserInteracted) {
+                    audio.currentTime = 0;
+                    audio.play().catch(err => console.log("Error replaying audio:", err));
+                }
+            };
+            
+            // Xử lý lỗi khi phát âm thanh
+            audio.onerror = () => {
+                console.log(`Audio error occurred with ${audioSrc}, code:`, audio.error?.code);
+            };
+            
+            // Tải âm thanh
+            audio.load();
+            
+            // Chỉ phát nếu người dùng đã tương tác
+            if (hasUserInteracted) {
+                setTimeout(() => {
+                    if (audioRef.current && soundEnabled) {
+                        console.log("User has interacted, attempting to play after delay");
+                        const playAudio = () => {
+                            if (audioRef.current) {
+                                audioRef.current.play().catch(err => {
+                                    console.log("Error playing audio:", err);
+                                    if (hasUserInteracted && soundEnabled) {
+                                        setTimeout(playAudio, 500);
+                                    }
+                                });
+                            }
+                        };
+                        playAudio();
+                    }
+                }, 200);
+            } else {
+                console.log("Audio loaded but waiting for user interaction before playing");
+            }
             
         } catch (err) {
             console.log("Error in audio setup:", err);
@@ -175,8 +245,9 @@ export default function WeatherEffects() {
                 }
                 audioRef.current = null;
             }
+            setAudioLoaded(false);
         };
-    }, [weather, soundEnabled]);
+    }, [weather, soundEnabled, hasUserInteracted, setHasUserInteracted]);
 
     // Hiệu ứng mưa (đã loại bỏ sấm chớp)
     useEffect(() => {
