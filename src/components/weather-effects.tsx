@@ -28,25 +28,6 @@ export default function WeatherEffects() {
         }
     }, [weather])
 
-    // Thêm sự kiện di chuột trên canvas để xác định tương tác
-    useEffect(() => {
-        if (!canvasRef.current) return;
-        
-        const handleCanvasInteraction = () => {
-            if (!userInteractionRef.current) {
-                console.log("Canvas interaction detected");
-                setHasUserInteracted();
-            }
-        };
-        
-        const canvas = canvasRef.current;
-        canvas.addEventListener('mousemove', handleCanvasInteraction);
-        
-        return () => {
-            canvas.removeEventListener('mousemove', handleCanvasInteraction);
-        };
-    }, [setHasUserInteracted]);
-
     // Xử lý âm thanh
     useEffect(() => {
         // Xử lý khi tắt âm thanh
