@@ -1,7 +1,5 @@
 "use client"
 
-import type React from "react"
-
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
@@ -17,7 +15,7 @@ interface MobileMenuProps {
 }
 
 export default function MobileMenu({ navItems, activeSection, scrolled, onNavClick }: MobileMenuProps) {
-  const { t, locale, setLocale } = useI18n()
+  const { locale, setLocale } = useI18n()
   const [isOpen, setIsOpen] = useState(false)
 
   // Đóng menu khi chuyển section
