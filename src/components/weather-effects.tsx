@@ -54,6 +54,7 @@ export default function WeatherEffects() {
                 break
             case "stars":
                 audioSrc = "/sounds/night.mp3"
+                console.log("Stars effect selected, audio source:", audioSrc)
                 break
             case "fireworks":
                 audioSrc = "/sounds/fireworks.mp3"
@@ -73,12 +74,25 @@ export default function WeatherEffects() {
 
         // Hàm tạo và cấu hình âm thanh
         const setupAudio = (src: string) => {
+            console.log("Setting up audio with source:", src)
             const audio = new Audio(src);
+            
+            // Đặt thuộc tính trước khi phát
             audio.loop = true;
             audio.volume = 0.3;
             
+            // Thêm event listener để theo dõi trạng thái
+            audio.addEventListener('canplaythrough', () => {
+                console.log(`Audio ${src} ready to play through`);
+            });
+            
+            audio.addEventListener('play', () => {
+                console.log(`Audio ${src} started playing`);
+            });
+            
             // Ngăn chặn sự kiện ended gây refresh trang
             audio.onended = () => {
+                console.log(`Audio ${src} ended, attempting to replay`);
                 // Nếu loop = true mà âm thanh vẫn kết thúc, hãy phát lại
                 if (audio.loop && soundEnabled) {
                     audio.currentTime = 0;
@@ -88,7 +102,7 @@ export default function WeatherEffects() {
             
             // Xử lý lỗi khi phát âm thanh
             audio.onerror = () => {
-                console.log("Audio error occurred");
+                console.log(`Audio error occurred with ${src}, code:`, audio.error?.code);
             };
             
             return audio;
@@ -98,13 +112,22 @@ export default function WeatherEffects() {
             const currentSrc = audioRef.current ? audioRef.current.src : "";
             const newSrc = new URL(audioSrc, window.location.href).href;
             
+            console.log("Weather:", weather, "Current audio src:", currentSrc, "New src:", newSrc);
+            
+            // Kiểm tra đặc biệt cho hiệu ứng sao đêm
+            if (weather === "stars") {
+                console.log("Preparing stars audio effect, enabled:", soundEnabled);
+            }
+            
             // Nếu đang phát cùng một file âm thanh, không làm gì cả
             if (currentSrc === newSrc && audioRef.current && !audioRef.current.paused) {
+                console.log("Already playing the correct audio file");
                 return;
             }
             
             // Nếu đang phát một file âm thanh khác, dừng nó
             if (audioRef.current) {
+                console.log("Stopping current audio to play a new one");
                 audioRef.current.pause();
                 if (audioRef.current.onended) {
                     audioRef.current.onended = null;
@@ -115,14 +138,27 @@ export default function WeatherEffects() {
             }
             
             // Tạo và phát file âm thanh mới
+            console.log("Creating new audio:", audioSrc);
             audioRef.current = setupAudio(audioSrc);
-            audioRef.current.play().catch(err => {
-                console.log("Error playing audio:", err);
-                // Xử lý lỗi khi trình duyệt chặn tự động phát
-                if (err.name === "NotAllowedError") {
-                    console.log("Autoplay prevented by browser. User interaction required.");
+            
+            // Thử phát với preload
+            audioRef.current.preload = "auto";
+            audioRef.current.load();
+            
+            // Đảm bảo âm thanh được phát
+            setTimeout(() => {
+                if (audioRef.current) {
+                    console.log("Attempting to play audio after delay");
+                    audioRef.current.play().catch(err => {
+                        console.log("Error playing audio:", err);
+                        // Xử lý lỗi khi trình duyệt chặn tự động phát
+                        if (err.name === "NotAllowedError") {
+                            console.log("Autoplay prevented by browser. User interaction required.");
+                        }
+                    });
                 }
-            });
+            }, 200);
+            
         } catch (err) {
             console.log("Error in audio setup:", err);
         }
