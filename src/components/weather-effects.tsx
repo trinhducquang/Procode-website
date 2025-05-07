@@ -73,7 +73,9 @@ export default function WeatherEffects() {
             if (audioSrc && !audioRef.current) {
                 audioRef.current = new Audio(audioSrc);
                 audioRef.current.loop = true;
-                audioRef.current.volume = 0.3;
+                // Xác định âm lượng dựa trên thiết bị
+                const isMobile = window.innerWidth <= 768;
+                audioRef.current.volume = isMobile ? 0.7 : 0.3; // Tăng âm lượng cho thiết bị di động
                 audioRef.current.preload = "auto";
                 audioRef.current.load();
                 setAudioLoaded(true);
@@ -162,7 +164,9 @@ export default function WeatherEffects() {
             
             // Đặt thuộc tính trước khi phát
             audio.loop = true;
-            audio.volume = 0.3;
+            // Xác định âm lượng dựa trên thiết bị
+            const isMobile = window.innerWidth <= 768;
+            audio.volume = isMobile ? 0.7 : 0.3; // Tăng âm lượng cho thiết bị di động
             audio.preload = "auto";
             
             // Thêm event listener để theo dõi trạng thái
