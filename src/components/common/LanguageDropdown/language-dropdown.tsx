@@ -2,11 +2,12 @@
 
 import { useState, useRef, useEffect } from "react"
 import { ChevronUp, ChevronDown } from "lucide-react"
+import Image from "next/image"
 
 interface LanguageOption {
     code: string
     name: string
-    flag?: string
+    flag: string
 }
 
 interface LanguageDropdownProps {
@@ -16,9 +17,9 @@ interface LanguageDropdownProps {
 }
 
 const languages: LanguageOption[] = [
-    { code: "en", name: "English", flag: "🇬🇧" },
-    { code: "ja", name: "Japanese", flag: "🇯🇵" },
-    { code: "vi", name: "Vietnamese", flag: "🇻🇳" },
+    { code: "en", name: "English", flag: "/flags/gb.svg" },
+    { code: "ja", name: "Japanese", flag: "/flags/jp.svg" },
+    { code: "vi", name: "Vietnamese", flag: "/flags/vn.svg" },
 ]
 
 export default function LanguageDropdown({
@@ -54,14 +55,24 @@ export default function LanguageDropdown({
                         : "bg-card-theme text-theme hover:bg-gray-200 dark:hover:bg-gray-700"
                 }`}
             >
-                {currentLang.flag && <span className="mr-2">{currentLang.flag}</span>}
-                <span>{currentLang.name}</span>
+                <span className="flex items-center gap-2">
+                    <span className="relative w-5 h-5 flex-shrink-0">
+                        <Image
+                            src={currentLang.flag}
+                            alt={currentLang.name}
+                            width={20}
+                            height={20}
+                            className="object-cover rounded-sm"
+                        />
+                    </span>
+                    <span>{currentLang.name}</span>
+                </span>
                 {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
             </button>
 
             {isOpen && (
                 <div
-                    className={`absolute z-50 w-full bg-card-theme rounded-md shadow-lg ${
+                    className={`absolute z-[20000] w-full bg-card-theme rounded-md shadow-lg ${
                         isMobile ? "bottom-full mb-1" : "top-full mt-1"
                     }`}
                 >
@@ -72,12 +83,20 @@ export default function LanguageDropdown({
                                 onLanguageChange(lang.code)
                                 setIsOpen(false)
                             }}
-                            className={`block w-full text-left px-3 py-2 hover:bg-gray-200 dark:hover:bg-gray-700 ${
+                            className={`block w-full text-left px-3 py-2 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center gap-2 ${
                                 currentLanguage === lang.code ? "bg-primary-theme text-primary-theme" : "text-theme"
                             }`}
                         >
-                            {lang.flag && <span className="mr-2">{lang.flag}</span>}
-                            {lang.name}
+                            <span className="relative w-5 h-5 flex-shrink-0">
+                                <Image
+                                    src={lang.flag}
+                                    alt={lang.name}
+                                    width={20}
+                                    height={20}
+                                    className="object-cover rounded-sm"
+                                />
+                            </span>
+                            <span>{lang.name}</span>
                         </button>
                     ))}
                 </div>

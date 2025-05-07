@@ -8,11 +8,31 @@ export default function WeatherEffects() {
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const audioRef = useRef<HTMLAudioElement | null>(null)
 
+    // Xóa canvas ngay khi weather thay đổi
+    useEffect(() => {
+        if (canvasRef.current) {
+            const canvas = canvasRef.current
+            const ctx = canvas.getContext("2d")
+            if (ctx) {
+                canvas.width = window.innerWidth
+                canvas.height = window.innerHeight
+                ctx.clearRect(0, 0, canvas.width, canvas.height)
+            }
+        }
+    }, [weather])
+
     // Xử lý âm thanh
     useEffect(() => {
+        // Xử lý khi tắt âm thanh
         if (!soundEnabled) {
             if (audioRef.current) {
                 audioRef.current.pause()
+                if (audioRef.current.onended) {
+                    audioRef.current.onended = null
+                }
+                if (audioRef.current.onerror) {
+                    audioRef.current.onerror = null
+                }
                 audioRef.current = null
             }
             return
@@ -42,28 +62,85 @@ export default function WeatherEffects() {
                 audioSrc = ""
         }
 
-        if (audioSrc) {
-            if (!audioRef.current) {
-                audioRef.current = new Audio(audioSrc)
-                audioRef.current.loop = true
-                audioRef.current.volume = 0.3
-                audioRef.current.play().catch((e) => console.log("Audio play failed:", e))
-            } else if (audioRef.current.src !== new URL(audioSrc, window.location.href).href) {
-                audioRef.current.pause()
-                audioRef.current = new Audio(audioSrc)
-                audioRef.current.loop = true
-                audioRef.current.volume = 0.3
-                audioRef.current.play().catch((e) => console.log("Audio play failed:", e))
-            }
-        }
-
-        return () => {
+        // Nếu không có file âm thanh, không làm gì cả
+        if (!audioSrc) {
             if (audioRef.current) {
                 audioRef.current.pause()
                 audioRef.current = null
             }
+            return;
         }
-    }, [weather, soundEnabled])
+
+        // Hàm tạo và cấu hình âm thanh
+        const setupAudio = (src: string) => {
+            const audio = new Audio(src);
+            audio.loop = true;
+            audio.volume = 0.3;
+            
+            // Ngăn chặn sự kiện ended gây refresh trang
+            audio.onended = () => {
+                // Nếu loop = true mà âm thanh vẫn kết thúc, hãy phát lại
+                if (audio.loop && soundEnabled) {
+                    audio.currentTime = 0;
+                    audio.play().catch(err => console.log("Error replaying audio:", err));
+                }
+            };
+            
+            // Xử lý lỗi khi phát âm thanh
+            audio.onerror = () => {
+                console.log("Audio error occurred");
+            };
+            
+            return audio;
+        };
+
+        try {
+            const currentSrc = audioRef.current ? audioRef.current.src : "";
+            const newSrc = new URL(audioSrc, window.location.href).href;
+            
+            // Nếu đang phát cùng một file âm thanh, không làm gì cả
+            if (currentSrc === newSrc && audioRef.current && !audioRef.current.paused) {
+                return;
+            }
+            
+            // Nếu đang phát một file âm thanh khác, dừng nó
+            if (audioRef.current) {
+                audioRef.current.pause();
+                if (audioRef.current.onended) {
+                    audioRef.current.onended = null;
+                }
+                if (audioRef.current.onerror) {
+                    audioRef.current.onerror = null;
+                }
+            }
+            
+            // Tạo và phát file âm thanh mới
+            audioRef.current = setupAudio(audioSrc);
+            audioRef.current.play().catch(err => {
+                console.log("Error playing audio:", err);
+                // Xử lý lỗi khi trình duyệt chặn tự động phát
+                if (err.name === "NotAllowedError") {
+                    console.log("Autoplay prevented by browser. User interaction required.");
+                }
+            });
+        } catch (err) {
+            console.log("Error in audio setup:", err);
+        }
+
+        // Cleanup khi component unmount hoặc deps thay đổi
+        return () => {
+            if (audioRef.current) {
+                audioRef.current.pause();
+                if (audioRef.current.onended) {
+                    audioRef.current.onended = null;
+                }
+                if (audioRef.current.onerror) {
+                    audioRef.current.onerror = null;
+                }
+                audioRef.current = null;
+            }
+        };
+    }, [weather, soundEnabled]);
 
     // Hiệu ứng mưa (đã loại bỏ sấm chớp)
     useEffect(() => {
@@ -381,63 +458,196 @@ export default function WeatherEffects() {
         }
     }, [weather])
 
-    // Hiệu ứng sao đêm - phiên bản v21
+    // Hiệu ứng Starfield Reverse - các ngôi sao chuyển động từ viền vào tâm
     useEffect(() => {
         if (weather !== "stars" || !canvasRef.current) return
 
         const canvas = canvasRef.current
-        const ctx = canvas.getContext("2d")
+        const ctx = canvas.getContext("2d", { alpha: true })
         if (!ctx) return
 
         canvas.width = window.innerWidth
         canvas.height = window.innerHeight
 
-        const stars: { x: number; y: number; size: number; opacity: number; pulse: number; pulseSpeed: number }[] = []
-        const starCount = 200
-
-        // Tạo các ngôi sao
+        let centerX = canvas.width / 2
+        let centerY = canvas.height / 2
+        
+        interface Star {
+            x: number
+            y: number
+            z: number
+            prevZ: number
+            size: number
+            brightness: number
+            color: string
+        }
+        
+        // Xác định số lượng sao dựa trên độ rộng màn hình và hiệu suất thiết bị
+        const isMobile = window.innerWidth <= 768
+        const isLowPerfDevice = navigator.hardwareConcurrency ? navigator.hardwareConcurrency <= 4 : true
+        
+        // Điều chỉnh số lượng sao dựa trên hiệu suất thiết bị
+        const getStarCount = () => {
+            if (isMobile && isLowPerfDevice) return 300
+            if (isMobile) return 500
+            if (isLowPerfDevice) return 600
+            return 1000
+        }
+        
+        const stars: Star[] = []
+        const starCount = getStarCount()
+        const speed = isMobile ? 3 : 5
+        
+        // Các màu sắc khác nhau cho ngôi sao - thêm màu đậm hơn
+        const starColors = [
+            'rgba(255, 255, 255, 1)', // Trắng
+            'rgba(173, 216, 230, 1)', // Xanh nhạt
+            'rgba(240, 248, 255, 1)', // Xanh rất nhạt
+            'rgba(255, 255, 224, 1)', // Vàng nhạt
+            'rgba(135, 206, 250, 1)', // Xanh da trời nhạt
+            'rgba(30, 144, 255, 1)',  // Xanh dương đậm
+            'rgba(0, 191, 255, 1)',   // Xanh da trời đậm
+            'rgba(70, 130, 180, 1)',  // Xanh steel
+            'rgba(100, 149, 237, 1)', // Xanh cornflower
+            'rgba(176, 224, 230, 1)'  // Xanh powder
+        ]
+        
+        // Khởi tạo các ngôi sao
         for (let i = 0; i < starCount; i++) {
             stars.push({
-                x: Math.random() * canvas.width,
-                y: Math.random() * canvas.height,
-                size: Math.random() * 2 + 0.5,
-                opacity: Math.random() * 0.5 + 0.3,
-                pulse: Math.random() * Math.PI,
-                pulseSpeed: Math.random() * 0.05 + 0.01,
+                x: Math.random() * canvas.width * 2 - canvas.width,
+                y: Math.random() * canvas.height * 2 - canvas.height,
+                z: Math.random() * 1000,
+                prevZ: 0,
+                size: Math.random() * 3 + 1,
+                brightness: Math.random() * 0.5 + 0.5,
+                color: starColors[Math.floor(Math.random() * starColors.length)]
             })
         }
 
-        // Vẽ sao đêm
-        const animate = () => {
+        // Biến theo dõi thời gian
+        let lastTime = 0
+        const targetFPS = 60
+        const targetFrameTime = 1000 / targetFPS
+
+        // Hàm vẽ và cập nhật trường sao
+        const animate = (timestamp: number) => {
             if (!ctx || !canvas) return
-
+            
+            // Kiểm soát tốc độ FPS
+            const deltaTime = timestamp - lastTime
+            if (deltaTime < targetFrameTime) {
+                requestAnimationFrame(animate)
+                return
+            }
+            lastTime = timestamp - (deltaTime % targetFrameTime)
+            
+            // Xóa canvas hoàn toàn trước khi vẽ
             ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-            // Vẽ các ngôi sao
-            stars.forEach((star) => {
-                star.pulse += star.pulseSpeed
-                const currentOpacity = star.opacity * (0.5 + 0.5 * Math.sin(star.pulse))
-
+            
+            // Sử dụng batch rendering để tối ưu hiệu suất
+            const hasShadowSupport = !isMobile && !isLowPerfDevice
+            let shadowsEnabled = false
+            let currentBatch: Star[] = []
+            
+            // Cập nhật vị trí tất cả các sao trước khi vẽ
+            for (const star of stars) {
+                // Lưu giá trị z trước đó để tính vết sao
+                star.prevZ = star.z
+                
+                // Di chuyển sao về phía màn hình (giảm giá trị z)
+                star.z -= speed
+                
+                // Nếu sao đã đi qua màn hình, tạo sao mới ở xa
+                if (star.z <= 0) {
+                    star.x = Math.random() * canvas.width * 2 - canvas.width
+                    star.y = Math.random() * canvas.height * 2 - canvas.height
+                    star.z = 1000
+                    star.prevZ = star.z
+                }
+            }
+            
+            // Vẽ tất cả các sao thường
+            for (const star of stars) {
+                // Chuyển đổi từ tọa độ 3D sang 2D
+                const sx = (star.x / star.z) * 500 + centerX
+                const sy = (star.y / star.z) * 500 + centerY
+                
+                // Kiểm tra xem sao có nằm trong khung nhìn không
+                if (sx < 0 || sx > canvas.width || sy < 0 || sy > canvas.height) {
+                    continue
+                }
+                
+                // Kích thước sao phụ thuộc vào khoảng cách
+                const scaledSize = star.size * (1000 - star.z) / 1000
+                
+                // Độ sáng tăng khi sao tiến gần
+                const opacity = star.brightness * (1000 - star.z) / 1000
+                
+                // Vẽ sao với độ sáng và kích thước thay đổi
                 ctx.beginPath()
-                ctx.fillStyle = `rgba(255, 255, 255, ${currentOpacity})`
-                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2)
+                
+                // Chỉ áp dụng shadow cho thiết bị có hiệu suất cao
+                if (hasShadowSupport && star.z < 300) {
+                    if (!shadowsEnabled) {
+                        ctx.shadowColor = star.color
+                        ctx.shadowBlur = scaledSize * 3
+                        ctx.shadowOffsetX = 0
+                        ctx.shadowOffsetY = 0
+                        shadowsEnabled = true
+                    }
+                } else if (shadowsEnabled) {
+                    ctx.shadowBlur = 0
+                    shadowsEnabled = false
+                }
+                
+                // Vẽ ngôi sao với hiệu ứng phát sáng để nổi bật trong chế độ sáng
+                ctx.fillStyle = star.color.replace('1)', `${opacity})`)
+                
+                // Vẽ ngôi sao 
+                const visibleSize = scaledSize * 1.1 // Giảm kích thước so với phiên bản trước
+                ctx.arc(sx, sy, visibleSize, 0, Math.PI * 2)
                 ctx.fill()
-
-                // Thêm hiệu ứng lấp lánh cho một số sao lớn
-                if (star.size > 1.5) {
-                    ctx.beginPath()
-                    ctx.strokeStyle = `rgba(255, 255, 255, ${currentOpacity * 0.3})`
+                
+                // Chỉ tạo border cho ngôi sao lớn
+                if (scaledSize > 1.5) {
+                    ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)'
                     ctx.lineWidth = 0.5
-
-                    // Vẽ tia sáng
-                    ctx.moveTo(star.x - star.size * 3, star.y)
-                    ctx.lineTo(star.x + star.size * 3, star.y)
-                    ctx.moveTo(star.x, star.y - star.size * 3)
-                    ctx.lineTo(star.x, star.y + star.size * 3)
-
                     ctx.stroke()
                 }
-            })
+                
+                // Tạo hiệu ứng chuyển động với vết sao (chỉ cho các sao lớn)
+                if (star.z < 500 && scaledSize > 1) {
+                    const prevSX = (star.x / star.prevZ) * 500 + centerX
+                    const prevSY = (star.y / star.prevZ) * 500 + centerY
+                    
+                    // Vẽ vết sao đơn giản hơn
+                    ctx.beginPath()
+                    ctx.strokeStyle = star.color.replace('1)', `${opacity * 0.6})`)
+                    ctx.lineWidth = scaledSize * 0.7
+                    ctx.moveTo(prevSX, prevSY)
+                    ctx.lineTo(sx, sy)
+                    ctx.stroke()
+                }
+                
+                // Tối ưu: chỉ thêm hiệu ứng lấp lánh cho số lượng nhỏ sao gần
+                if (!isMobile && star.z < 150 && scaledSize > 2) {
+                    const glowSize = scaledSize * 3 // Giảm kích thước hào quang
+                    const glow = ctx.createRadialGradient(sx, sy, 0, sx, sy, glowSize)
+                    glow.addColorStop(0, star.color.replace('1)', `${opacity * 0.9})`))
+                    glow.addColorStop(1, 'rgba(255, 255, 255, 0)')
+                    
+                    ctx.beginPath()
+                    ctx.fillStyle = glow
+                    ctx.arc(sx, sy, glowSize, 0, Math.PI * 2)
+                    ctx.fill()
+                }
+            }
+            
+            // Tắt shadow sau khi vẽ xong
+            if (shadowsEnabled) {
+                ctx.shadowBlur = 0
+            }
 
             requestAnimationFrame(animate)
         }
@@ -449,6 +659,8 @@ export default function WeatherEffects() {
             if (!canvas) return
             canvas.width = window.innerWidth
             canvas.height = window.innerHeight
+            centerX = canvas.width / 2
+            centerY = canvas.height / 2
         }
 
         window.addEventListener("resize", handleResize)
@@ -508,13 +720,6 @@ export default function WeatherEffects() {
                 exploded: false,
             })
 
-            // Phát âm thanh pháo hoa nếu được bật
-            if (soundEnabled) {
-                const launchSound = new Audio("/sounds/firework-launch.mp3")
-                launchSound.volume = 0.1
-                launchSound.play().catch((e) => console.log("Firework launch sound failed:", e))
-            }
-
             // Tạo pháo hoa tiếp theo sau một khoảng thời gian ngẫu nhiên
             setTimeout(createFirework, Math.random() * 2000 + 500)
         }
@@ -539,13 +744,6 @@ export default function WeatherEffects() {
             }
 
             firework.exploded = true
-
-            // Phát âm thanh nổ nếu được bật
-            if (soundEnabled) {
-                const explosionSound = new Audio("/sounds/firework-explosion.mp3")
-                explosionSound.volume = 0.2
-                explosionSound.play().catch((e) => console.log("Firework explosion sound failed:", e))
-            }
         }
 
         // Bắt đầu với một vài pháo hoa
@@ -636,7 +834,7 @@ export default function WeatherEffects() {
         <canvas
             ref={canvasRef}
             className={`fixed inset-0 pointer-events-none z-[1000] ${weather === "none" ? "hidden" : ""}`}
-            style={{ opacity: 0.8 }} // Giảm độ đậm để không che phủ nền
+            style={{ opacity: weather === "stars" ? 0.95 : 0.8 }} // Giảm độ đậm cho hiệu ứng sao đêm
         />
     )
 }

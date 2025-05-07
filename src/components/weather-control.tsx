@@ -38,56 +38,69 @@ export default function WeatherControl() {
 
             <AnimatePresence>
                 {isOpen && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20, scale: 0.8 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 20, scale: 0.8 }}
-                        transition={{ duration: 0.2 }}
-                        className="absolute bottom-16 right-0 bg-card-theme rounded-lg shadow-xl p-4 w-64"
-                    >
-                        <div className="flex justify-between items-center mb-3 border-b pb-2">
-                            <h3 className="text-theme font-medium">Hiệu ứng thời tiết</h3>
-                            <button
-                                onClick={() => setSoundEnabled(!soundEnabled)}
-                                className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center gap-1"
-                                aria-label={soundEnabled ? "Tắt âm thanh" : "Bật âm thanh"}
-                            >
-                                {soundEnabled ? (
-                                    <>
-                                        <Volume2 size={16} className="text-theme" />
-                                        <span className="text-xs text-theme">Bật</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <VolumeX size={16} className="text-theme" />
-                                        <span className="text-xs text-theme">Tắt</span>
-                                    </>
-                                )}
-                            </button>
-                        </div>
-                        <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
-                            {weatherOptions.map((option) => (
+                    <>
+                        <motion.div
+                            className="fixed inset-0 z-[10000]"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setIsOpen(false)}
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, y: 20, scale: 0.8 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 20, scale: 0.8 }}
+                            transition={{ duration: 0.2 }}
+                            className="absolute bottom-16 right-0 bg-card-theme rounded-lg shadow-xl p-4 w-64 z-[10001]"
+                        >
+                            <div className="flex justify-between items-center mb-3 border-b pb-2">
+                                <h3 className="text-theme font-medium">Hiệu ứng thời tiết</h3>
                                 <button
-                                    key={option.id}
-                                    onClick={() => {
-                                        setWeather(option.id)
-                                        setIsOpen(false)
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        setSoundEnabled(!soundEnabled)
                                     }}
-                                    className={`w-full p-2 rounded-md flex items-center justify-between transition-colors ${
-                                        weather === option.id
-                                            ? "bg-primary-theme text-primary-theme"
-                                            : "bg-card-theme text-theme hover:bg-gray-200 dark:hover:bg-gray-700"
-                                    }`}
+                                    className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center gap-1"
+                                    aria-label={soundEnabled ? "Tắt âm thanh" : "Bật âm thanh"}
                                 >
-                  <span className="flex items-center gap-2">
-                    <span className="text-lg">{option.emoji}</span>
-                      {option.name}
-                  </span>
-                                    {weather === option.id && <span className="text-xs">✓</span>}
+                                    {soundEnabled ? (
+                                        <>
+                                            <Volume2 size={16} className="text-theme" />
+                                            <span className="text-xs text-theme">Bật</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <VolumeX size={16} className="text-theme" />
+                                            <span className="text-xs text-theme">Tắt</span>
+                                        </>
+                                    )}
                                 </button>
-                            ))}
-                        </div>
-                    </motion.div>
+                            </div>
+                            <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+                                {weatherOptions.map((option) => (
+                                    <button
+                                        key={option.id}
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            setWeather(option.id)
+                                            setIsOpen(false)
+                                        }}
+                                        className={`w-full p-2 rounded-md flex items-center justify-between transition-colors ${
+                                            weather === option.id
+                                                ? "bg-primary-theme text-primary-theme"
+                                                : "bg-card-theme text-theme hover:bg-gray-200 dark:hover:bg-gray-700"
+                                        }`}
+                                    >
+                                        <span className="flex items-center gap-2">
+                                            <span className="text-lg">{option.emoji}</span>
+                                            {option.name}
+                                        </span>
+                                        {weather === option.id && <span className="text-xs">✓</span>}
+                                    </button>
+                                ))}
+                            </div>
+                        </motion.div>
+                    </>
                 )}
             </AnimatePresence>
         </div>
